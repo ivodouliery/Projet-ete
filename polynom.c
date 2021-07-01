@@ -9,92 +9,76 @@ typedef struct polynome{
     int modulo;
 } polynom;
 
-int add(int a, int b, int modulo){ // H : a,b déja modulo
+// Fonctions calculs de base sur entiers modulaires
+
+int mod_add(int a, int b, int modulo){ // H : a,b déja modulo
 
     int res = a + b;
 
-    if(res >= modulo){res -= modulo;}
+    if(res >= modulo)
+        res -= modulo;
 
     return res;
-
 }
 
-int sous(int a, int b, int modulo){ //H : a,b déja modulo
+int mod_sous(int a, int b, int modulo){ //H : a,b déja modulo
 
     int c = a-b;
 
-    if (c<0){
+    if (c<0)
         c += modulo;
-    }
 
     return c;
 }
 
-int mult(int a, int b, int modulo){//H : a,b déja modulo
+int mod_mult(int a, int b, int modulo){//H : a,b déja modulo
 
     int res = a*b;
-
-    while (res >= modulo)
-    {
-        res -=modulo;
-    }
-    
-    return res;
-
-}
-
-int maximum(int n,int m){
-
-    if(n < m ){return m;}
-    else{return n;}
-    
-}
-
-int minimum(int n,int m){
-
-    if(n < m ){return n;}
-    else{return m;}
-
-}
-
-polynom* initialisation(int degre,int modulo){//créer un polynom
-
-    polynom* res = (polynom*)malloc(sizeof(polynom));
-    res->val = calloc(degre+1, sizeof(int));
-    res->degre = degre;
-    res->modulo = modulo;
+    int tmp = res/modulo;
+    res -= tmp*modulo;
 
     return res;
-
 }
 
-void libererPoynome(polynom* p){
+int int_maximum(int n,int m){
 
-    if(p){
-        free(p->val);
-        free(p);
-    }
-
-}
-
-int degreP(polynom* p1){// met à jour le degré du polynom
-
-    if(p1->degre == 0){
-        return 0;
-    }
-
-    int res = p1->degre;
-
-    while (p1->val[res] == 0 && res > 0)
-    {
-        res--;
-    }
+    if(n < m)
+        return m;
     
-    return res;
-
+    return n;
 }
 
-int pgcd(int a, int b){
+int int_minimum(int n,int m){
+
+    if(n < m)
+        return n;
+    
+    return m;
+}
+
+int mod_puissance2(int a, int p, int mod){
+
+    unsigned long long res = pow(a,p);
+    int tmp = res/mod;
+    res -= tmp*mod;
+
+    return res;
+}
+
+int mod_puissance(int a, int p, int mod){
+
+    int res = 1;
+
+    for(int i=0; i<p; i++){
+        res = mod_mult(res, a, mod);
+    }
+
+    return res;
+}
+
+// Fonctions un peu plus avancées sur les entiers
+
+int int_pgcd(int a, int b){
 
     if(a == 0){
         return b;
@@ -102,19 +86,16 @@ int pgcd(int a, int b){
         return a;
     }
 
-    if(a==b){
+    if(a == b){
         return a;        
-    }     
-    else
-    {
-        if(a>b)
-           return pgcd(a-b, b);
-        else
-           return pgcd(a, b-a);
+    }else if(a>b){
+        return int_pgcd(a-b, b);
     }
+
+    return int_pgcd(a, b-a);
 }
 
-int euclide_etendu(int a, int b, int* u, int* v) { // a,b entiers naturels
+int int_euclide_etendu(int a, int b, int* u, int* v) { // a,b entiers naturels
     int r1 = a;
     int r2 = b; 
     int u1 =1;
@@ -141,109 +122,253 @@ int euclide_etendu(int a, int b, int* u, int* v) { // a,b entiers naturels
     return r1; //(r1 entier naturel et u1, v1 entiers relatifs)
 }
 
+int mod_inverse(int a, int modulo,int* u, int* v){ //trouve l'mod_inverse modulaire
 
-
-void affichage(polynom* p1){ //affiche le polynome
-
-    for(int i = p1->degre; i >= 0; i--){
-
-
-
-        printf("+ %dx^%d ",p1->val[i],i);
+    if(int_pgcd(a,modulo) != 1){
+        return -1;
     }
-    
-    printf("\n");
-
-}
-
-int inverse(int a, int modulo,int* u, int* v){//trouve l'inverse modulaire (code à surement revoir)
-
-    if(pgcd(a,modulo) != 1){return -1;}
     else{
-
-        euclide_etendu(a,modulo,u,v);
-
+        int_euclide_etendu(a,modulo,u,v);
     }
 
-    while(*u < 0){*u = *u + modulo;}
+    while(*u < 0){
+        *u += modulo;
+    }
+
     return *u;
 }
 
-int* random_tab(int deg,int modulo){//rends un tab de valeurs aléatoire à un certain modulo (positif)
+int* mod_tab_random(int deg,int modulo){ //rends un tab de valeurs aléatoire à un certain modulo (positif)
 
     int i = 0;
 
     int* res = (int*)malloc(sizeof(int)*(deg+1));
 
-    while (i < (deg + 1))
-    {
+    while (i < (deg + 1)){
         res[i] = (rand()%(modulo));
         i++;
     }
 
-    return res;
-        
+    return res;  
 }
 
-polynom* randomP(int degre, int modulo){//rend un random polynom (pour les tests)
+int* Liste_deux_A_n(int n){
 
-    polynom* res = initialisation(degre,modulo);
+    int* res = (int*)malloc(sizeof(int)*n);
 
-    res->degre = degre;
-    res->modulo = modulo;
-    res->val = random_tab(degre,modulo);
-    res->degre = degreP(res);
+    int i;
+
+    for(i = 2; i<n+1; i++){
+        res[i-2] = i;
+    }
+    
+    res[i-2] = -1;
 
     return res;
-
 }
 
-polynom* addition(polynom* p1, polynom* p2){//addition modulaire de deux polynomes
-
-    int degre = maximum(p1->degre,p2->degre);
-    int min = minimum(p1->degre,p2->degre);
-
-    polynom* res = initialisation(degre,p1->modulo);
+int* liste_realocation(int* Liste,int nbelem){
 
     int i = 0;
 
-    while (i <= min)
-    {
-        res->val[i] = add(p1->val[i],p2->val[i],p1->modulo);
+    int compteur = 0;
+
+    int* res = (int*)malloc((sizeof(int))*(nbelem + 1));
+
+    while (Liste[i] != -1){
+
+        if(Liste[i] != 0){
+            res[compteur] = Liste[i];
+            compteur++;
+        }
+
+        i++;
+    }
+    
+    res[compteur] = -1;
+    free(Liste);
+
+    return res;
+}
+
+int* liste_non_diviseur(int* Liste,int n,int max){
+
+    if(n==1)
+        return Liste;
+
+    if(n < 1)
+        return NULL;
+
+    int* res = (int*)calloc(max,sizeof(int));
+
+    int i = 0;
+    int compteur = 0;
+   
+    while (Liste[i] != -1){  
+
+        if(Liste[i]%n != 0){
+            res[compteur] = Liste[i];
+            compteur++;
+        }
+
+        i++;
+    }
+
+    res[compteur] = -1;
+    free(Liste);
+    res = liste_realocation(res,compteur);
+    
+    return res;
+}
+
+void liste_affichage(int* Liste){
+
+    int i = 0;
+
+    while (Liste[i] != -1){
+        printf("%d ",Liste[i]);
+        i++;
+    }
+    
+    printf("\n");
+}
+
+int* int_crible(int n){
+
+    int* res = calloc(n,sizeof(int));
+    int* Liste = Liste_deux_A_n(n);
+
+    int i = 0;
+
+    while (Liste[0] != -1){
+        res[i] = Liste[0];
+        Liste = liste_non_diviseur(Liste,Liste[0],n);
+        i++;
+    }
+
+    res[i] = -1;
+    res = liste_realocation(res,i);
+
+    return res;
+}
+
+int* erastothene(int n){ // la fonction erastothene ne nous a pas servi dans le projet mais elle nous semblait utile pour la décompostion en facteur premiers d'un entier
+
+    int taille = (int)n/2 + 1;
+    
+    int* res = calloc(taille,sizeof(int));
+    int* Prem = int_crible(n);
+    
+    int compteur = 0;
+    int i = 0;
+    int reste = n;
+
+    while (reste != 1){
+
+        while ((reste % Prem[i] == 0)&&(reste !=1)){
+            res[compteur] = Prem[i];
+            compteur++;
+            reste = reste/Prem[i];
+        }
+        
+        i++;
+    }
+    
+    res[compteur] = -1;
+    free(Prem);
+    res = liste_realocation(res,compteur);
+
+    return res;
+}
+
+// Fonction de base sur polynome a coeff modulaire
+
+polynom* poly_initialisation(int degre,int modulo){//créer un polynom
+
+    polynom* res = (polynom*)malloc(sizeof(polynom));
+    res->val = calloc(degre+1, sizeof(int));
+    res->degre = degre;
+    res->modulo = modulo;
+
+    return res;
+
+}
+
+void poly_liberer(polynom* p){
+
+    if(p){
+        free(p->val);
+        free(p);
+    }
+}
+
+int poly_degre(polynom* p1){// met à jour le degré du polynom
+
+    if(p1->degre == 0)
+        return 0;
+
+    int res = p1->degre;
+
+    while (p1->val[res] == 0 && res > 0){
+        res--;
+    }
+    
+    return res;
+}
+
+polynom* poly_random(int degre, int modulo){//rend un random polynom (pour les tests)
+
+    polynom* res = poly_initialisation(degre,modulo);
+
+    res->degre = degre;
+    res->modulo = modulo;
+    res->val = mod_tab_random(degre,modulo);
+    res->degre = poly_degre(res);
+
+    return res;
+}
+
+polynom* poly_add(polynom* p1, polynom* p2){//poly_add modulaire de deux polynomes
+
+    int degre = int_maximum(p1->degre,p2->degre);
+    int min = int_minimum(p1->degre,p2->degre);
+
+    polynom* res = poly_initialisation(degre,p1->modulo);
+
+    int i = 0;
+
+    while (i <= min){
+        res->val[i] = mod_add(p1->val[i],p2->val[i],p1->modulo);
         i++;
     }
     
     if(p1->degre == p2->degre){
-        res->degre = degreP(res);
+        res->degre = poly_degre(res);
         return res;
-
     }
     else if(p1->degre > p2->degre){
 
-        while (i <= degre)
-        {
+        while (i <= degre){
             res->val[i] = p1->val[i];
             i++;
         }
-        res->degre = degreP(res);
-        return res;
 
+        res->degre = poly_degre(res);
+        return res;
     }
     else{
 
-        while (i <= degre)
-        {
+        while (i <= degre){
             res->val[i] = p2->val[i];
             i++;
         }
-        res->degre = degreP(res);
-        return res;
 
+        res->degre = poly_degre(res);
+        return res;
     }
-    
 }
 
-polynom* soustraction(polynom* p1, polynom* p2){// soustraction modulaire de deux polynomes
+polynom* poly_sous(polynom* p1, polynom* p2){// poly_sous modulaire de deux polynomes
 
     // t1 - t2
 
@@ -252,55 +377,46 @@ polynom* soustraction(polynom* p1, polynom* p2){// soustraction modulaire de deu
         return NULL;
     }
 
+
     int modulo = p1->modulo;
+    int degre = int_maximum(p1->degre,p2->degre);
+    int min = int_minimum(p1->degre,p2->degre);
 
-    int degre = maximum(p1->degre,p2->degre);
-
-    int taille = degre + 1;
-
-    polynom* res = initialisation(degre,modulo);
-
-    int min = minimum(p1->degre,p2->degre);
-
-    for(int i=0; i<=min; i++){
-
-        int p2val = p2->val[i];
-        int val = sous(p1->val[i],p2val,modulo);
-        res->val[i] = val;
+    polynom* res = poly_initialisation(degre,modulo);
     
+    for(int i=0; i<=min; i++){
+        int p2val = p2->val[i];
+        int val = mod_sous(p1->val[i],p2val,modulo);
+        res->val[i] = val;
     }
     
     if(p1->degre == p2->degre){
 
-        res->degre = degreP(res);
+        res->degre = poly_degre(res);
         return res;
     }
     else{    
         if(min == p1->degre){
 
-            for(int i=0; i<=taille; i++){
-                res->val[i] = sous(0,p2->val[i],modulo);
+            for(int i=0; i<=degre; i++){
+                res->val[i] = mod_sous(0,p2->val[i],modulo);
             }
-            
-
         }
         else{
-
-            for(int i=0; i<=taille; i++){
+            for(int i=0; i<=degre; i++){
                 res->val[i] = p1->val[i];
             }
-
         }
-    
     }
 
-    res->degre = degreP(res);
+    res->degre = poly_degre(res);
+
     return res;
 }
 
-polynom* multiplication(polynom* p1, polynom* p2){
+polynom* poly_mult(polynom* p1, polynom* p2){
 
-    polynom* res = initialisation(p1->degre + p2->degre,p1->modulo);
+    polynom* res = poly_initialisation(p1->degre + p2->degre,p1->modulo);
 
     int deg = p1->degre + p2->degre + 1;
 
@@ -308,141 +424,197 @@ polynom* multiplication(polynom* p1, polynom* p2){
 
         for(int j=0; j <= p2->degre; j++){
 
-            res->val[i + j] = add(res->val[i+j],mult(p1->val[i],p2->val[j],p1->modulo),p1->modulo);
+            res->val[i + j] = mod_add(res->val[i+j],mod_mult(p1->val[i],p2->val[j],p1->modulo),p1->modulo);
 
         }
     }
 
-    res->degre = degreP(res);
+    res->degre = poly_degre(res);
 
     return res;
-
 }
 
-polynom* augmenter_puissance(polynom* p, int newdegre, int coeff1, int coeff2, int* u, int* v){
+polynom* poly_puissance(polynom* p, int puissance){
 
-    polynom* res = initialisation(newdegre, p->modulo);
+    polynom* res = poly_initialisation(p->degre, p->modulo);
+    res->val = p->val;
+
+    for(int i = 1; i<puissance; i++){
+        res = poly_mult(res, p);
+    }
+
+    return res;
+}
+
+int poly_estNul(polynom* p){
+
+    for(int i = 0; i<=p->degre; i++){
+        if(p->val[i] != 0)
+            return 0;
+    }
+
+    return 1;
+}
+
+int poly_estUn(polynom* p){
+
+    if(p->val[0] != 1)
+        return 0;
+
+    for(int i = 1; i<p->degre+1; i++){
+        if(p->val[i] != 0)
+            return 0;
+    }
+    
+    return 1;
+}
+
+void poly_affichage(polynom* p1){ //affiche le polynome (très mignonne)
+
+    for(int i = p1->degre; i >= 0; i--){
+
+        if(p1->val[i] == 0){
+        }
+        else if(p1->val[i] == 1){
+            if(i == p1->degre && p1->degre == 1){
+                printf("x ");
+            }
+            else if(i == p1->degre && p1->degre != 1){
+                printf("x^%d ",i);
+            }else if(i == 0){
+                printf("+ 1");
+            }else if(i == 1){
+                printf("+ x ");
+            }
+            else{       
+                printf("+ %dx^%d ",p1->val[i],i);
+            }
+        }
+        else{
+            if(i == p1->degre && p1->degre != 1){
+                printf("%dx^%d ",p1->val[i],i);
+            }else if(i == 0){
+                printf("+ %d",p1->val[i]);
+            }else if(i == 1){
+                printf("+ %dx ",p1->val[i]);
+            }
+            else{
+                printf("+ %dx^%d ",p1->val[i],i);
+            }
+        }
+    }
+
+    printf("\n");
+}
+
+// Fonctions un peu plus avancées sur les polynomes
+
+polynom* poly_ajuster_puissance(polynom* p, int newdegre, int coeff1, int coeff2, int* u, int* v){
+
+    polynom* res = poly_initialisation(newdegre, p->modulo);
 
     int diffdeg = newdegre - p->degre;
 
-    for(int i = 0; i <= p->degre; i++){
+    int inv = mod_inverse(coeff2, p->modulo, u, v);
+    int multi = mod_mult(coeff1, inv, p->modulo);
 
-        int val = mult(mult(coeff1, inverse(coeff2, p->modulo, u, v), p->modulo),p->val[i], p->modulo);
+    for(int i = 0; i <= p->degre; i++){
+        int val = mod_mult(multi,p->val[i], p->modulo);
         res->val[i+diffdeg] = val;
-    
     }
     
-    res->degre = degreP(res);
+    res->degre = poly_degre(res);
 
     return res;
 }
 
-int newdegre(int* t1,int taillemax){
-
-    for(int i = taillemax; i >= 0; i--){
-        if(t1[i] !=0){
-            return i;
-        }
-    }
-    
-    return 0;
-}
-
-polynom* reste_division_polynome(polynom* p1, polynom* p2, int* u, int* v){ //renvoie le reste de la division euclidienne de p1/p2
+polynom* poly_reste_division(polynom* p1, polynom* p2, int* u, int* v){ //renvoie le reste de la division euclidienne de p1/p2
 
     //hypothèse :  deg p1 >= deg tp2
 
-    int deg1 = p1->degre;
-    int deg2 = p2->degre;
-
-    int degReste = deg1;
-
-    polynom* reste = initialisation(deg1, p1->modulo);
-
+    polynom* reste = poly_initialisation(p1->degre, p1->modulo);
     reste->val = p1->val;
 
-    while (degReste >= deg2)
-    {
-        int coeff1 = reste->val[degReste];
-        int coeff2 = p2->val[deg2];
+    int degreste = p1->degre;
+    int deg2 = p2->degre;
 
-        polynom* b = augmenter_puissance(p2, degReste, coeff1, coeff2, u, v);
-        
-        reste = soustraction(reste,b);
-        degReste = reste->degre;
+    int coeff2 = p2->val[deg2];
 
-        libererPoynome(b);
+    while (degreste >= deg2){
+
+        int coeff1 = reste->val[degreste];
         
+        polynom* b = poly_ajuster_puissance(p2, degreste, coeff1, coeff2, u, v);
+        
+        reste = poly_sous(reste,b);
+        degreste = reste->degre;
+
+        poly_liberer(b);
     }
     
     return reste;
 }
 
-int estPolynomeNul(polynom* p){
+polynom* poly_quotient_division(polynom* p1, polynom* p2, int* u, int* v){ //renvoie le quotient de la division euclidienne de p1/p2
 
-    for(int i = 0; i<=p->degre; i++){
-        if(p->val[i] != 0){
-            return 0;
-        }
-    }
-
-    return 1;
-
-}
-
-polynom* division_polynome(polynom* p1, polynom* p2, int* u, int* v){ //renvoie le quotient de la division euclidienne de p1/p2
-
-    int deg1 = p1->degre;
-    int deg2 = p2->degre;
-
-    if(estPolynomeNul(p2)){
+    if(poly_estNul(p2)){
         printf("on ne peut pas diviser par le polynome nul\n");
         return NULL;
     }
 
-    if(deg1<deg2){
-
-        return division_polynome(p2, p1, u, v);
-
+    if(p1->degre < p2->degre){
+        printf("on ne peut pas diviser par un polynome de degre supérieur\n");
+        return NULL;
     }
 
-    int degReste = deg1;
-    int degQuotient = deg1 - deg2;
+    int degreste = p1->degre;
+    int deg2 = p2->degre;
+    int degQuotient = degreste - deg2;
 
-    polynom* reste = initialisation(deg1, p1->modulo);
-    polynom* quotient = initialisation(degQuotient, p1->modulo);
+    polynom* reste = poly_initialisation(degreste, p1->modulo);
+    polynom* quotient = poly_initialisation(degQuotient, p1->modulo);
 
     reste->val = p1->val;
 
     int i = degQuotient;
+    int cpt = 0;
 
-    while (degReste >= deg2){
+    int coeff2 = p2->val[deg2];
+    int invCoeff2 = mod_inverse(coeff2, p1->modulo, u, v);
 
-        int coeff1 = reste->val[degReste];
-        int coeff2 = p2->val[deg2];
+    while (degreste >= deg2){
 
-        int coeffQuotient = mult(coeff1, inverse(coeff2, p1->modulo, u, v), p1->modulo);
+        int coeff1 = reste->val[degreste];
+
+        int coeffQuotient = mod_mult(coeff1, invCoeff2, p1->modulo);
         quotient->val[i] = coeffQuotient;
 
-        polynom* b = augmenter_puissance(p2, degReste, coeff1, coeff2, u, v);
-        reste = soustraction(reste,b);
-        degReste = reste->degre;
+        polynom* b = poly_ajuster_puissance(p2, degreste, coeff1, coeff2, u, v);
+        reste = poly_sous(reste,b);
+        degreste = reste->degre;
 
-        libererPoynome(b);
+        poly_liberer(b);
+        
+        if(cpt == 1){
+            break;
+        }
+        if(degreste == 0){
+            cpt++;
+        }
 
-        i = degReste - deg2;
+        i = degreste - deg2;
     }
     
-    libererPoynome(reste);
-    quotient->degre = degreP(quotient);
+    poly_liberer(reste);
+    quotient->degre = poly_degre(quotient);
 
     return quotient;
 }
 
-polynom* pgcd_polynome(polynom* p1,polynom* p2,int* u,int* v){
+polynom* poly_pgcd(polynom* p1,polynom* p2,int* u,int* v){
 
-    polynom* a = initialisation(p1->degre, p1->modulo);
-    polynom* b = initialisation(p2->degre, p2->modulo);
+    polynom* a = poly_initialisation(p1->degre, p1->modulo);
+    polynom* b = poly_initialisation(p2->degre, p2->modulo);
 
     a->val = p1->val;
     b->val = p2->val;
@@ -452,349 +624,159 @@ polynom* pgcd_polynome(polynom* p1,polynom* p2,int* u,int* v){
 
     while (deg2 > 0){
         polynom* temp = b;
-        b = reste_division_polynome(a,b,u,v);
+        b = poly_reste_division(a,b,u,v);
         a = temp;
         deg1 = deg2;
-        deg2 = degreP(b);
+        deg2 = poly_degre(b);
     }
 
-    libererPoynome(b);
+    poly_liberer(b);
     
     return a;
 
 }
 
-polynom* derive(polynom* p){
-    if (p->degre==0){
-        return initialisation(0,p->modulo);
+polynom* poly_derive(polynom* p){
+
+    if (p->degre==0)
+        return poly_initialisation(0,p->modulo);
+
+    polynom* p2 = poly_initialisation(p->degre-1,p->modulo);
+
+    for(int i = 0; i<p->degre; i++){
+        p2->val[i]=mod_mult((i+1), p->val[i+1], p->modulo);
     }
 
-    polynom* p2 = initialisation(p->degre-1,p->modulo);
+    p2->degre = poly_degre(p2);
 
-    unsigned int i=0;
-
-    while (i<p->degre){
-        p2->val[i]=mult((i+1), p->val[i+1], p->modulo);
-        i++;
-    }
-
-    p2->degre = degreP(p2);
     return p2;
-
 }
 
-polynom** algorithme_yun(polynom* p){
-    polynom** LP = malloc((p->degre)*sizeof(polynom));
-
-    int u, v;
-    int i = 1;
-
-    polynom* G = pgcd_polynome(p, derive(p), &u, &v);
-    affichage(G);
-    polynom* H = division_polynome(p, G, &u, &v);
-    affichage(H);
-    polynom* K = division_polynome(derive(p), G, &u, &v);
-    affichage(K);
-
-    while(degreP(H) >= 1){
-
-        polynom* R = pgcd_polynome(H, soustraction(K, derive(H)), &u, &v);
-        affichage(R);
-        if(!estPolynomeNul(R)){
-            K = division_polynome(soustraction(K, derive(H)), R, &u, &v);
-            affichage(K);
-        }    
-        if(!estPolynomeNul(R)){
-            H = division_polynome(H, R, &u, &v);
-            affichage(H);
-        }
-        LP[i] = R;
-        i++;
-
-    }
-
-    return LP;
-
-    
-}
-
-int puissance(int a, int p, int mod){
-
-    int res = pow(a,p);
-
-    while(res >= mod){
-        res -= mod;
-    }
-
-    return res;
-
-}
-
-int est_racine(polynom* p, int racine){
+int poly_estRacine(polynom* p, int racine){
 
     int res = 0;
 
-    int i = 0;
-
-    while (i <= p->degre)
-    {
-        int puis = puissance(racine,i,p->modulo);
+    for(int i = 0; i<=p->degre; i++){
+        int puis = mod_puissance(racine,i,p->modulo);
         int pval = p->val[i];
-        int multi = mult(pval,puis,p->modulo);
-        res = add(multi,res,p->modulo);
-
-        i++;
-
+        int mod_multi = mod_mult(pval,puis,p->modulo);
+        res = mod_add(mod_multi,res,p->modulo);
     }
     
-    if(res ==0){return 1;}
+    if(res == 0)
+        return 1;
     
     return 0;
 }
 
+polynom* poly_facteurRacine(int racine, int modulo){
 
-polynom* polynom_racine(int racine, int modulo){
-
-    polynom* res = initialisation(1,modulo);
+    polynom* res = poly_initialisation(1,modulo);
 
     res->val[1] = 1;
 
-    res->val[0] = (-1)*racine + modulo;
+    if(racine == 0){
+        res->val[0] = 0;
+        return res; 
+    }
+
+    res->val[0] = modulo - racine;
 
     return res;
-
 }
 
-polynom** algo_naif(polynom* p){
+// Algorithmes de factorisation 
+
+polynom** algo_naif(polynom* p){ // mais pas trop quand meme
 
     polynom** res = (polynom**)malloc(sizeof(polynom*)*p->degre);
-    polynom* p2 = initialisation(p->degre, p->modulo);
+    polynom* p2 = poly_initialisation(p->degre, p->modulo);
     p2->val = p->val;
     int* racine = malloc(sizeof(int)*p->degre);
+
     int compteur = 0;
     int i = 0;
     int u,v;
     int degre = p->degre;
 
-    while (i <= p->modulo && compteur != p->degre)
-    {
-        while(est_racine(p2,i) == 1)
-        {
-            // p = p / X - racine
-            res[compteur] = polynom_racine(i,p->modulo);
+    while (i <= p->modulo && compteur != p->degre){
+        
+        while(poly_estRacine(p2,i) == 1){
+            res[compteur] = poly_facteurRacine(i,p->modulo);
             racine[compteur] = i;
-            p2 = division_polynome(p2,res[compteur],&u,&v);
-            affichage(p2);
+            p2 = poly_quotient_division(p2,res[compteur],&u,&v);
             compteur++;
-
         }
         
         i++;
-
     }
 
     if(compteur != degre){
-
-        libererPoynome(p2);
-        printf("le polynom n'est pas scindable dans notre corps\n");
+        free(p2);
+        printf("le polynome n'est pas scindable dans notre corps\n");
         return NULL;
-
     }
     
-    /*i = 0;
-
-    while (i < p->degre)
-    {
-        res[i] = initialisation(1,p->modulo);
-
-        res[i]->val[1] = 1;
-
-        if(racine[i] > 0){racine[i] = (-1)*racine[i] + p->modulo;}
-
-        res[i]->val[0] = racine[i];
-
-        i++;
-
-    }*/
-    
-    libererPoynome(p2);
+    poly_liberer(p2);
     return res;
-
 }
 
+polynom** algo_yun(polynom* p, int* nbRacine){// H tout les ai sont supposés premiers entre eux pensez à faire le teste en début de fonction
 
+    polynom** res = (polynom**)malloc((p->degre)*sizeof(polynom*));
 
-
-int* Liste_deux_n(int n){
-
-    int* res = (int*)malloc(sizeof(int)*n);
-
-    int i = 2;
-
-    while (i < n+1)
-    {
-
-        res[i-2] = i;
-        i++;
-
-    }
-    
-    res[i-2] = -1;
-
-    return res;
-
-}
-
-int* reallocation(int* Liste,int nbelem){
-
-    int i = 0;
-
+    int u,v;
     int compteur = 0;
+    int nbRac = 0;
 
-    int* res = (int*)malloc((sizeof(int))*(nbelem + 1));
+    polynom* pDerive = poly_derive(p);
+    polynom* A = poly_pgcd(p,pDerive,&u,&v);
+    polynom* B = poly_quotient_division(p,A,&u,&v);
+    polynom* C = poly_quotient_division(pDerive,A,&u,&v);
+    polynom* bDerive = poly_derive(B);
+    polynom* D = poly_sous(C,bDerive);
 
-    while (Liste[i] != -1)
-    {
-        if(Liste[i] != 0){
+    while (B->degre > 0){ // il faut faire degP tours de boucles
 
-            res[compteur] = Liste[i];
-            compteur++;
+        A = poly_pgcd(B,D,&u,&v);
 
+        polynom* Abis = poly_initialisation(0, A->modulo);
+        Abis->val[0] = A->val[A->degre];
+
+        printf("compteur : %d\n",compteur);
+
+        // ajout de ai dans le résultat
+        res[compteur] = poly_quotient_division(A,Abis,&u,&v);;   
+        nbRac++;     
+        compteur++;
+
+        poly_liberer(Abis);
+
+        B = poly_quotient_division(B,A,&u,&v);
+
+        if(poly_estUn(B)){
+            break;
         }
 
-        i++;
+        C = poly_quotient_division(D,A,&u,&v);
 
+        bDerive = poly_derive(B);
+
+        D = poly_sous(C,bDerive);
     }
     
-    res[compteur] = -1;
-
-    free(Liste);
-
+    *nbRacine = nbRac;
     return res;
-
 }
 
-int* liste_non_diviseur(int* Liste,int n,int max){
-
-    if(n==1){return Liste;}
-
-    if(n < 1){return NULL;}
-
-    int* res = (int*)calloc(max,sizeof(int));
-    int i = 0;
-
-    int compteur = 0;
-   
-    while (Liste[i] != -1)
-    {   
-        if(Liste[i]%n != 0){
-
-            res[compteur] = Liste[i];
-            compteur++;
-            //printf("on a ajoute %d en indice %d qui donne dans res : %d \n",Liste[i],compteur-1,res[compteur - 1]);
-        }
-
-        i++;
-
-    }
-
-    res[compteur] = -1;
-
-    free(Liste);
-
-    res = reallocation(res,compteur);
-    
-    return res;
-
-}
-
-void affiche_liste(int* Liste){
-
-    int i = 0;
-
-    while (Liste[i] != -1)
-    {
-        printf("%d ",Liste[i]);
-        i++;
-    }
-    
-    printf("\n");
-
-}
-
-int* crible(int n){
-
-    int* res = calloc(n,sizeof(int));
-
-    int i = 0;
-
-    int* Liste = Liste_deux_n(n);
-
-    while (Liste[0] != -1)
-    {
-        res[i] = Liste[0];
-
-        Liste = liste_non_diviseur(Liste,Liste[0],n);
-
-        i++;
-
-    }
-
-    res[i] = -1;
-
-    res = reallocation(res,i);
-
-    return res;
-     
-}
-
-int* erastothene(int n){
-
-    int taille = (int)n/2 + 1;
-
-    int* Prem = crible(n);
- 
-    int compteur = 0;
-
-    int i = 0;
-
-    int reste = n;
-
-    int* res = calloc(taille,sizeof(int));
-
-    while (reste != 1)
-    {
-        while ((reste % Prem[i] == 0)&&(reste !=1))
-        {
-
-            res[compteur] = Prem[i];
-            compteur++;
-            reste = reste/Prem[i];
-
-        }
-        
-        i++;
-
-    }
-    
-    res[compteur] = -1;
-
-    free(Prem);
-
-    res = reallocation(res,compteur);
-
-    return res;
-
-}
-
-
+// Un joli main
 
 int main(int argc, char const *argv[]){
 
     srand(time(NULL));
     
-    polynom* p1 = initialisation(5,5);
-    polynom* p2 = initialisation(3,5);
+    polynom* p1 = poly_initialisation(5,5);
+    polynom* p2 = poly_initialisation(3,5);
 
     int t1[6] = {2,2,3,4,3,4};
     int t2[4] = {2,4,3,2};
@@ -803,127 +785,289 @@ int main(int argc, char const *argv[]){
     p2->val = t2;
 
     printf("\nP1 : ");
-    affichage(p1);
+    poly_affichage(p1);
     printf("P2 : ");    
-    affichage(p2);
+    poly_affichage(p2);
 
-    polynom* p3 = addition(p1,p2);
-    printf("\nAddition P1 + P2 : ");
-    affichage(p3);
+    polynom* p3 = poly_add(p1,p2);
+    printf("\npoly_add P1 + P2 : ");
+    poly_affichage(p3);
 
-    polynom* p4 = multiplication(p1,p2);
-    printf("Multiplication P1*P2 : ");
-    affichage(p4);
+    polynom* p4 = poly_mult(p1,p2);
+    printf("poly_mult P1*P2 : ");
+    poly_affichage(p4);
 
-    polynom* p5 = soustraction(p1,p2);
-    printf("Soustraction P1 - P2 : ");
-    affichage(p5);
+    polynom* p5 = poly_sous(p1,p2);
+    printf("poly_sous P1 - P2 : ");
+    poly_affichage(p5);
 
-    polynom* p8 = derive(p1);
+    polynom* p6 = poly_derive(p1);
     printf("Derivée de P1 : ");
-    affichage(p8);
+    poly_affichage(p6);
 
-    polynom* p12 = derive(p2);
+    polynom* p7 = poly_derive(p2);
     printf("Derivée de P2 : ");
-    affichage(p12);
+    poly_affichage(p7);
     
     int u = 0;
     int v = 0;
 
-    polynom* p6 = reste_division_polynome(p1, p2, &u, &v);
+    polynom* p8 = poly_reste_division(p1, p2, &u, &v);
     printf("\nReste de la divison euclidienne P1/P2 : ");
-    affichage(p6);
+    poly_affichage(p8);
 
-    polynom* p10 = division_polynome(p1, p2, &u, &v);
+    polynom* p9 = poly_quotient_division(p1, p2, &u, &v);
     printf("Quotient de la division euclidienne P1/P2 : ");
-    affichage(p10);
+    poly_affichage(p9);
 
-    polynom* p7 = multiplication(p10, p2);
-    printf("Multiplication du quotient avec P2 : ");
-    affichage(p7);
+    polynom* p10 = poly_mult(p9, p2);
+    printf("poly_mult du quotient avec P2 : ");
+    poly_affichage(p10);
 
-    polynom* p11 = addition(p7, p6);
+    polynom* p11 = poly_add(p10, p8);
     printf("Puis on ajoute le reste et on trouve P1 = ");
-    affichage(p11);
+    poly_affichage(p11);
 
-    polynom* p9 = pgcd_polynome(p1, p2, &u, &v);
-    printf("\nPGCD : ");
-    affichage(p9);
+    polynom* p12 = poly_pgcd(p1, p2, &u, &v);
+    printf("\nint_pgcd : ");
+    poly_affichage(p12);
+
+    printf("________________________________________\n\nDecompositon du polynome (modulo 7) ");
+    polynom* p13 = poly_initialisation(6, 7);
+    int tab1[7] = {0,0,0,0,0,0,1};
+    p13->val = tab1;
+    printf("P = ");
+    poly_affichage(p13);
     
-    polynom* p20 = initialisation(3, 5);
-    int tab4[4] = {4,1,4,1};
-    p20->val = tab4;
-    printf("\np20 = ");
-    affichage(p20);
-    
-    polynom** p19 = algo_naif(p20);
-    for(int i=0; i<p20->degre; i++){
+
+    printf("________________________________________\n\nAlgo NAIF : \n\n");
+
+    polynom** tp1 = algo_naif(p13);
+    for(int i=0; i<p13->degre; i++){
         printf("facteur %d : ", i);
-        affichage(p19[i]);
+        poly_affichage(tp1[i]);
     }
 
-    //free(p1);
-    //free(p2);
-    libererPoynome(p3);
-    libererPoynome(p4);
-    libererPoynome(p5);
-    libererPoynome(p6);
-    libererPoynome(p7);
-    libererPoynome(p8);
-    libererPoynome(p9);
-    libererPoynome(p10);
-    libererPoynome(p11);
-    libererPoynome(p12);
-    //libererPoynome(p13);
-    //libererPoynome(p14);
-    //libererPoynome(p15);
-    //libererPoynome(p16);
-    //(p17);
-    //(p18);
-    //libererPoynome(p19);
-    //libererPoynome(p20);
+    for(int i = 0; i<p13->degre; i++){
+        poly_liberer(tp1[i]);
+    }
+
+    printf("________________________________________\n\nAlgo de YUN : \n\n");
+
+    int nbRacines;
+
+    polynom** tp2 = algo_yun(p13, &nbRacines);
+    polynom** tv1 = malloc(nbRacines*sizeof(polynom*));
+    for(int i=0; i<nbRacines; i++){
+        printf("A%d : ", i+1);
+        poly_affichage(tp2[i]);
+        tv1[i] = poly_puissance(tp2[i], i+1);
+    }
+
+    polynom* v1 = tv1[0];
+    for(int i = 1; i<nbRacines; i++){
+        v1 = poly_mult(v1, tv1[i]);
+    }
+
+    polynom* s1 = poly_sous(p13,v1);
+
+    printf("\nverification après multiplication des Ai : P = ");
+    poly_affichage(s1);
+
+    if(nbRacines > 1)
+        poly_liberer(v1);
+
+    for(int i = 0; i<nbRacines; i++){
+        poly_liberer(tp2[i]);
+        if(i == 0){
+            free(tv1[i]);
+        }
+    }
+    
+    printf("________________________________________\n\nDecompositon du polynome (modulo 5) ");
+
+    polynom* p14 = poly_initialisation(6, 5);
+    int tab2[7] = {3,4,2,3,0,4,1};
+    p14->val = tab2;
+    printf("P = ");
+    poly_affichage(p14);
+
+    printf("________________________________________\n\nAlgo NAIF : \n\n");
+
+    polynom** tp3 = algo_naif(p14);
+    for(int i=0; i<p14->degre; i++){
+        printf("facteur %d : ", i);
+        poly_affichage(tp3[i]);
+    }
+
+    for(int i = 0; i<p14->degre; i++){
+        poly_liberer(tp3[i]);
+    }
+
+    printf("________________________________________\n\nAlgo de YUN : \n\n");
+ 
+    polynom** tp4 = algo_yun(p14, &nbRacines);
+    polynom** tv2 = malloc(nbRacines*sizeof(polynom*));
+    for(int i=0; i<nbRacines; i++){
+        printf("A%d : ", i+1);
+        poly_affichage(tp4[i]);
+        tv2[i] = poly_puissance(tp4[i], i+1);
+    }
+
+    polynom* v2 = tv2[0];
+    for(int i = 1; i<nbRacines; i++){
+        v2 = poly_mult(v2, tv2[i]);
+    }
+    polynom* s2 = poly_sous(p14,v2);
+
+    printf("\nverification après multiplication des Ai : P = ");
+    poly_affichage(s2);
+
+    if(nbRacines > 1)
+        poly_liberer(v2);
+
+    for(int i = 0; i<nbRacines; i++){
+        poly_liberer(tp4[i]);
+        if(i == 0){
+            free(tv2[i]);
+        }    
+    }
+
+    printf("________________________________________\n\nDecompositon du polynome (modulo 13) ");
+
+    polynom* p15 = poly_initialisation(10, 13);
+    int tab3[11] = {10,1,10,3,1,11,11,11,10,4,1};
+    p15->val = tab3;
+    printf("P = ");
+    poly_affichage(p15);
+
+    printf("________________________________________\n\nAlgo NAIF : \n\n");
+
+    polynom** tp5 = algo_naif(p15);
+    for(int i=0; i<p15->degre; i++){
+        printf("facteur %d : ", i);
+        poly_affichage(tp5[i]);
+    }
+
+    for(int i = 0; i<p15->degre; i++){
+        poly_liberer(tp5[i]);
+    }
+
+    printf("________________________________________\n\nAlgo de YUN : \n\n");
+ 
+    polynom** tp6 = algo_yun(p15, &nbRacines);
+    polynom** tv3 = malloc(nbRacines*sizeof(polynom*));
+    for(int i=0; i<nbRacines; i++){
+        printf("A%d : ", i+1);
+        poly_affichage(tp6[i]);
+        tv3[i] = poly_puissance(tp6[i], i+1);
+    }
+
+    polynom* v3 = tv3[0];
+    for(int i = 1; i<nbRacines; i++){
+        v3 = poly_mult(v3, tv3[i]);
+    }
+
+    polynom* s3 = poly_sous(p15,v3);
+
+    printf("\nverification après multiplication des Ai : P = ");
+    poly_affichage(s3);
+
+    if(nbRacines > 1)
+        poly_liberer(v3);
+
+    for(int i = 0; i<nbRacines; i++){
+        poly_liberer(tp6[i]);
+        if(i == 0){
+            free(tv3[i]);
+        }
+    }
+
+    printf("________________________________________\n\nDecompositon du polynome (modulo 53) ");
+
+    polynom* p16 = poly_initialisation(15, 53);
+    int tab4[16] = {0,0,0,0,0,4,36,50,42,47,10,5,48,29,30,1};
+    p16->val = tab4;
+    printf("P = ");
+    poly_affichage(p16);
+
+    printf("________________________________________\n\nAlgo NAIF : \n\n");
+
+    polynom** tp7 = algo_naif(p16);
+    for(int i=0; i<p16->degre; i++){
+        printf("facteur %d : ", i);
+        poly_affichage(tp7[i]);
+    }
+
+    for(int i = 0; i<p16->degre; i++){
+        poly_liberer(tp7[i]);
+    }
+
+    printf("________________________________________\n\nAlgo de YUN : \n\n");
+ 
+    polynom** tp8 = algo_yun(p16, &nbRacines);
+    polynom** tv4 = malloc(nbRacines*sizeof(polynom*));
+    for(int i=0; i<nbRacines; i++){
+        printf("A%d : ", i+1);
+        poly_affichage(tp8[i]);
+        tv4[i] = poly_puissance(tp8[i], i+1);
+    }
+
+    polynom* v4 = tv4[0];
+    for(int i = 1; i<nbRacines; i++){
+        v4 = poly_mult(v4, tv4[i]);
+    }
+
+    polynom* s4 = poly_sous(p16,v4);
+
+    printf("\nverification après multiplication des Ai : P = ");
+    poly_affichage(s4);
+
+    if(nbRacines > 1)
+        poly_liberer(v4);
+
+    for(int i = 0; i<nbRacines; i++){
+        poly_liberer(tp8[i]);
+        if(i == 0){
+            free(tv4[i]);
+        }
+    }
+
+    printf("\n");
+
+    free(p1);
+    free(p2);
+    poly_liberer(p3);
+    poly_liberer(p4);
+    poly_liberer(p5);
+    poly_liberer(p6);
+    poly_liberer(p7);
+    poly_liberer(p8);
+    poly_liberer(p9);
+    poly_liberer(p10);
+    poly_liberer(p11);
+    poly_liberer(p12);
+    free(p13);
+    free(p14);
+    free(p15);
+    free(p16);
+    free(tp1);
+    free(tp2);
+    free(tp3);
+    free(tp4);
+    free(tp5);
+    free(tp6);
+    free(tp7);
+    free(tp8);
+    free(tv1);
+    free(tv2);
+    free(tv3);
+    free(tv4);
+    poly_liberer(s1);
+    poly_liberer(s2);
+    poly_liberer(s3);
+    poly_liberer(s4);
 
     return 0;
 }
 
-
-/*
-
-int main(int argc, char const *argv[])
-{
-    
-    int* test1 = Liste_deux_n(100);
-
-    int* test2 = liste_non_diviseur(test1,2,100);
-
-    affiche_liste(test2);
-    
-    int* test3 = liste_non_diviseur(test2,3,100);
-
-    affiche_liste(test3);
-    printf("pd 1 \n");
-    int* test4 = liste_non_diviseur(test3,5,100);
-    printf("pd 2 \n");
-    affiche_liste(test4);
-
-
-    free(test1);
-    free(test2);
-    free(test3);
-    free(test4);
-
-    //int* gabriel = crible(150000);
-
-    //affiche_liste(gabriel);
-
-    int* yesin = erastothene(1234567);
-
-    affiche_liste(yesin);
-
-    free(yesin);
-
-    //free(gabriel);
-
-    return 0;
-}
-*/
