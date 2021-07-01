@@ -297,7 +297,8 @@ polynom* poly_initialisation(int degre,int modulo){//créer un polynom
 void poly_liberer(polynom* p){
 
     if(p){
-        free(p->val);
+        if(p->val)
+            free(p->val);
         free(p);
     }
 }
@@ -471,6 +472,11 @@ int poly_estUn(polynom* p){
 
 void poly_affichage(polynom* p1){ //affiche le polynome (très mignonne)
 
+    if(p1->degre == 0 && p1->val[0] == 0){
+        printf("0\n");
+        return;
+    }
+
     for(int i = p1->degre; i >= 0; i--){
 
         if(p1->val[i] == 0){
@@ -479,7 +485,7 @@ void poly_affichage(polynom* p1){ //affiche le polynome (très mignonne)
             if(i == p1->degre && p1->degre == 1){
                 printf("x ");
             }
-            else if(i == p1->degre && p1->degre != 1){
+            else if(i == p1->degre && p1->degre >= 1){
                 printf("x^%d ",i);
             }else if(i == 0){
                 printf("+ 1");
@@ -491,7 +497,7 @@ void poly_affichage(polynom* p1){ //affiche le polynome (très mignonne)
             }
         }
         else{
-            if(i == p1->degre && p1->degre != 1){
+            if(i == p1->degre && p1->degre >= 1){
                 printf("%dx^%d ",p1->val[i],i);
             }else if(i == 0){
                 printf("+ %d",p1->val[i]);
@@ -712,7 +718,8 @@ polynom** algo_naif(polynom* p){ // mais pas trop quand meme
     }
 
     if(compteur != degre){
-        free(p2);
+        poly_liberer(p2);
+        free(res);
         printf("le polynome n'est pas scindable dans notre corps\n");
         return NULL;
     }
@@ -742,8 +749,6 @@ polynom** algo_yun(polynom* p, int* nbRacine){// H tout les ai sont supposés pr
 
         polynom* Abis = poly_initialisation(0, A->modulo);
         Abis->val[0] = A->val[A->degre];
-
-        printf("compteur : %d\n",compteur);
 
         // ajout de ai dans le résultat
         res[compteur] = poly_quotient_division(A,Abis,&u,&v);;   
@@ -790,15 +795,15 @@ int main(int argc, char const *argv[]){
     poly_affichage(p2);
 
     polynom* p3 = poly_add(p1,p2);
-    printf("\npoly_add P1 + P2 : ");
+    printf("\naddition P1 + P2 : ");
     poly_affichage(p3);
 
     polynom* p4 = poly_mult(p1,p2);
-    printf("poly_mult P1*P2 : ");
+    printf("multiplication P1*P2 : ");
     poly_affichage(p4);
 
     polynom* p5 = poly_sous(p1,p2);
-    printf("poly_sous P1 - P2 : ");
+    printf("soustraction P1 - P2 : ");
     poly_affichage(p5);
 
     polynom* p6 = poly_derive(p1);
@@ -821,7 +826,7 @@ int main(int argc, char const *argv[]){
     poly_affichage(p9);
 
     polynom* p10 = poly_mult(p9, p2);
-    printf("poly_mult du quotient avec P2 : ");
+    printf("Multuplication du quotient avec P2 : ");
     poly_affichage(p10);
 
     polynom* p11 = poly_add(p10, p8);
@@ -829,12 +834,12 @@ int main(int argc, char const *argv[]){
     poly_affichage(p11);
 
     polynom* p12 = poly_pgcd(p1, p2, &u, &v);
-    printf("\nint_pgcd : ");
+    printf("\nPGCD entre P1 et P2: ");
     poly_affichage(p12);
 
     printf("________________________________________\n\nDecompositon du polynome (modulo 7) ");
-    polynom* p13 = poly_initialisation(6, 7);
-    int tab1[7] = {0,0,0,0,0,0,1};
+    polynom* p13 = poly_initialisation(4, 7);
+    int tab1[5] = {0,0,6,0,1};
     p13->val = tab1;
     printf("P = ");
     poly_affichage(p13);
@@ -871,7 +876,7 @@ int main(int argc, char const *argv[]){
 
     polynom* s1 = poly_sous(p13,v1);
 
-    printf("\nverification après multiplication des Ai : P = ");
+    printf("\nverification : P - la multiplication des Ai = ");
     poly_affichage(s1);
 
     if(nbRacines > 1)
@@ -920,7 +925,7 @@ int main(int argc, char const *argv[]){
     }
     polynom* s2 = poly_sous(p14,v2);
 
-    printf("\nverification après multiplication des Ai : P = ");
+    printf("\nverification : P - la multiplication des Ai = ");
     poly_affichage(s2);
 
     if(nbRacines > 1)
@@ -970,7 +975,7 @@ int main(int argc, char const *argv[]){
 
     polynom* s3 = poly_sous(p15,v3);
 
-    printf("\nverification après multiplication des Ai : P = ");
+    printf("\nverification : P - la multiplication des Ai = ");
     poly_affichage(s3);
 
     if(nbRacines > 1)
@@ -1020,7 +1025,7 @@ int main(int argc, char const *argv[]){
 
     polynom* s4 = poly_sous(p16,v4);
 
-    printf("\nverification après multiplication des Ai : P = ");
+    printf("\nverification : P - la multiplication des Ai = ");
     poly_affichage(s4);
 
     if(nbRacines > 1)
@@ -1028,9 +1033,8 @@ int main(int argc, char const *argv[]){
 
     for(int i = 0; i<nbRacines; i++){
         poly_liberer(tp8[i]);
-        if(i == 0){
+        if(i == 0)
             free(tv4[i]);
-        }
     }
 
     printf("\n");
